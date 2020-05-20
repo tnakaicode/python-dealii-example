@@ -1,0 +1,23 @@
+# VSCode
+.vscode/*
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyc[cod]
+
+# Build
+build/*
+
+#tmp
+tmp/*
+temp_*/*
+*/temp_*/*
+
+# CMake
+*/CMakeFiles/*
+*/.cmake/*
+*CMakeCache.txt
+
+# step-26
+step-26/*.vtk
