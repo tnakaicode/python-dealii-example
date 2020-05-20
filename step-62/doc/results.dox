@@ -55,7 +55,7 @@ plt.xlabel('frequency (GHz)')
 plt.ylabel('phase (rad)')
 plt.title('Phase (transmission coefficient)\n')
 
-plt.show()
+#plot.sho()
 h5_file.close()
 @endcode
 
