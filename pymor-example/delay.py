@@ -1,141 +1,104 @@
 #!/usr/bin/env python
-# coding: utf-8
-#This file is part of the pyMOR project (http://www.pymor.org).
-#Copyright 2013-2020 pyMOR developers and contributors. All rights reserved.
-#License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
-# # Create heat equation model
+# This file is part of the pyMOR project (http://www.pymor.org).
+# Copyright 2013-2020 pyMOR developers and contributors. All rights reserved.
+# License: BSD 2-Clause License (http://opensource.org/licenses/BSD-2-Clause)
 
-# In[ ]:
+"""Delay demo
 
+Cascade of delay and integrator
+"""
 
 import numpy as np
 import scipy.linalg as spla
-import scipy.sparse as sps
 import matplotlib.pyplot as plt
 
-from pymor.basic import *
-from pymor.models.iosys import LinearDelayModel
-from pymor.reductors.interpolation import DelayBHIReductor, TFBHIReductor
+from pymor.models.iosys import TransferFunction
+from pymor.reductors.interpolation import TFBHIReductor
+from pymor.reductors.h2 import TFIRKAReductor
+from pymor.vectorarrays.numpy import NumpyVectorSpace
 
+if __name__ == '__main__':
+    tau = 0.1
 
-# In[ ]:
+    def H(s):
+        return np.array([[np.exp(-s) / (tau * s + 1)]])
 
+    def dH(s):
+        return np.array([[-(tau * s + tau + 1) * np.exp(-s) / (tau * s + 1) ** 2]])
 
-p = InstationaryProblem(
-    StationaryProblem(
-        domain=LineDomain([0.,1.], left='robin', right='robin'),
-        diffusion=ConstantFunction(1., 1),
-        robin_data=(ConstantFunction(1., 1), ExpressionFunction('(x[...,0] < 1e-10) * 1.', 1)),
-        outputs=(('l2_boundary', ExpressionFunction('(x[...,0] > (1 - 1e-10)) * 1.', 1)),)
-    ),
-    ConstantFunction(0., 1),
-    T=3.
-)
+    tf = TransferFunction(NumpyVectorSpace(1), NumpyVectorSpace(1), H, dH)
 
-fom, _ = discretize_instationary_cg(p, diameter=1/100, nt=100)
+    r = 10
+    tf_irka_reductor = TFIRKAReductor(tf)
+    rom = tf_irka_reductor.reduce(r, maxit=1000)
 
+    sigma_list = tf_irka_reductor.sigma_list
+    fig, ax = plt.subplots()
+    ax.plot(sigma_list[-1].real, sigma_list[-1].imag, '.')
+    ax.set_title('Final interpolation points of TF-IRKA')
+    ax.set_xlabel('Re')
+    ax.set_ylabel('Im')
+    plt.show()
 
-# In[ ]:
+    w = np.logspace(-1, 3, 200)
 
+    fig, ax = plt.subplots()
+    tf.mag_plot(w, ax=ax)
+    rom.mag_plot(w, ax=ax, linestyle='dashed')
+    ax.set_title('Magnitude plots of the full and reduced model')
+    plt.show()
 
-lti = fom.to_lti()
+    fig, ax = plt.subplots()
+    (tf - rom).mag_plot(w, ax=ax)
+    ax.set_title('Magnitude plots of the error system')
+    plt.show()
 
+    # step response
+    E = rom.E.matrix
+    A = rom.A.matrix
+    B = rom.B.matrix
+    C = rom.C.matrix
 
-# # Add delayed feedback from output to input
+    nt = 1000
+    t = np.linspace(0, 4, nt)
+    x_old = np.zeros(rom.order)
+    y = np.zeros(nt)
+    for i in range(1, nt):
+        h = t[i] - t[i - 1]
+        x_new = spla.solve(E - h / 2 * A, (E + h / 2 * A).dot(x_old) + h * B[:, 0])
+        x_old = x_new
+        y[i] = C.dot(x_new)[0]
 
-# In[ ]:
+    step_response = np.piecewise(t, [t < 1, t >= 1], [0, 1]) * (1 - np.exp(-(t - 1) / tau))
+    fig, ax = plt.subplots()
+    ax.plot(t, step_response, '-', t, y, '--')
+    ax.set_title('Step responses of the full and reduced model')
+    ax.set_xlabel('$t$')
+    plt.show()
 
+    # match steady state (add interpolation point at 0)
+    sigma_ss = list(sigma_list[-1]) + [0]
+    b_ss = tf.input_space.ones(r + 1)
+    c_ss = tf.output_space.ones(r + 1)
+    interp_reductor = TFBHIReductor(tf)
+    rom_ss = interp_reductor.reduce(sigma_ss, b_ss, c_ss)
 
-tau = 1.
-g = 5.
-Atau = sps.coo_matrix(([g], ([0], [lti.order - 1])), (lti.order, lti.order)).tocsc()
-Atau = NumpyMatrixOperator(Atau, source_id=lti.solution_space.id, range_id=lti.solution_space.id)
-td_lti = LinearDelayModel(lti.A, (Atau,), (tau,), lti.B, lti.C, E=lti.E)
-print(td_lti)
+    # step response
+    E_ss = rom_ss.E.matrix
+    A_ss = rom_ss.A.matrix
+    B_ss = rom_ss.B.matrix
+    C_ss = rom_ss.C.matrix
 
+    x_ss_old = np.zeros(rom_ss.order)
+    y_ss = np.zeros(nt)
+    for i in range(1, nt):
+        h = t[i] - t[i - 1]
+        x_ss_new = spla.solve(E_ss - h / 2 * A_ss, (E_ss + h / 2 * A_ss).dot(x_ss_old) + h * B_ss[:, 0])
+        x_ss_old = x_ss_new
+        y_ss[i] = C_ss.dot(x_ss_new)[0]
 
-# In[ ]:
-
-
-fig, ax = plt.subplots()
-w = np.logspace(-1, 2.5, 500)
-td_lti.mag_plot(w, ax=ax)
-ax.set_title('Magnitude plot of the FOM')
-#plot.sho()
-
-
-# # Unstructured Hermite interpolation
-
-# In[ ]:
-
-
-interp = TFBHIReductor(td_lti)
-
-
-# In[ ]:
-
-
-r = 3
-sigma = np.logspace(0, 1, r)
-sigma = np.concatenate((1j * sigma, -1j * sigma))
-b = td_lti.input_space.ones(2 * r)
-c = td_lti.output_space.ones(2 * r)
-
-rom = interp.reduce(sigma, b, c)
-err_rom = td_lti - rom
-
-
-# In[ ]:
-
-
-fig, ax = plt.subplots()
-td_lti.mag_plot(w, ax=ax)
-rom.mag_plot(w, ax=ax)
-ax.set_title('Magnitude plot of the FOM and ROM')
-#plot.sho()
-
-
-# In[ ]:
-
-
-fig, ax = plt.subplots()
-err_rom.mag_plot(w, ax=ax)
-ax.set_title('Magnitude plot of the error')
-#plot.sho()
-
-
-# # Delay-preserving reduction by Hermite interpolation
-
-# In[ ]:
-
-
-delay_interp = DelayBHIReductor(td_lti)
-
-
-# In[ ]:
-
-
-td_rom = delay_interp.reduce(sigma, b, c)
-err_td_rom = td_lti - td_rom
-
-
-# In[ ]:
-
-
-fig, ax = plt.subplots()
-td_lti.mag_plot(w, ax=ax)
-rom.mag_plot(w, ax=ax)
-td_rom.mag_plot(w, ax=ax)
-ax.set_title('Magnitude plot of the FOM and ROMs')
-#plot.sho()
-
-
-# In[ ]:
-
-
-fig, ax = plt.subplots()
-err_rom.mag_plot(w, ax=ax, color='tab:orange')
-err_td_rom.mag_plot(w, ax=ax, color='tab:green')
-ax.set_title('Magnitude plot of the errors')
-#plot.sho()
-
+    fig, ax = plt.subplots()
+    ax.plot(t, step_response, '-', t, y_ss, '--')
+    ax.set_title('Step responses of the full and reduced model 2')
+    ax.set_xlabel('$t$')
+    plt.show()
