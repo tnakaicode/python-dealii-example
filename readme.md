@@ -1,3 +1,7 @@
+```bash
+cmake -DDEAL_II_WITH_PETSC=OFF -DDEAL_II_PETSC_WITH_COMPLEX=OFF -DDEAL_II_WITH_P4EST=OFF -DDEAL_II_WITH_TRILINOS=OFF ..
+```
+
 <title>The deal.II Readme</title>
 
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8">

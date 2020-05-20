@@ -19,5 +19,6 @@ temp_*/*
 */.cmake/*
 *CMakeCache.txt
 
-# step-26
+# example
 step-26/*.vtk
+step-51/*.vtk
