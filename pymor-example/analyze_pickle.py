@@ -49,8 +49,8 @@ def _bins(start, stop, steps=100):
     might sometimes not return a 1d array
     '''
     bins = np.logspace(np.log10(start), np.log10(stop), steps)
-    if bins.shape == (steps,1):
-        bins = bins[:,0]
+    if bins.shape == (steps, 1):
+        bins = bins[:, 0]
     return bins
 
 
@@ -88,7 +88,8 @@ def analyze_pickle_histogram(args):
             sys.stdout.flush()
             err = fom.solve(mu) - reductor.reconstruct(u)
             if args['--error-norm']:
-                errs.append(np.max(getattr(fom, args['--error-norm'] + '_norm')(err)))
+                errs.append(
+                    np.max(getattr(fom, args['--error-norm'] + '_norm')(err)))
             else:
                 errs.append(np.max(err.l2_norm()))
             print('done')
@@ -105,7 +106,7 @@ def analyze_pickle_histogram(args):
         # setup axes
         left, width = 0.1, 0.65
         bottom, height = 0.1, 0.65
-        bottom_h = left_h = left+width+0.02
+        bottom_h = left_h = left + width + 0.02
         rect_scatter = [left, bottom, width, height]
         rect_histx = [left, bottom_h, width, 0.2]
         rect_histy = [left_h, bottom, 0.2, height]
@@ -127,10 +128,14 @@ def analyze_pickle_histogram(args):
         axScatter.scatter(errs, ests)
 
         # plot histograms
-        x_hist, x_bin_edges = np.histogram(errs, bins=_bins(total_min, total_max))
-        axHistx.bar(x_bin_edges[1:], x_hist, width=x_bin_edges[:-1] - x_bin_edges[1:], color='blue')
-        y_hist, y_bin_edges = np.histogram(ests, bins=_bins(total_min, total_max))
-        axHisty.barh(y_bin_edges[1:], y_hist, height=y_bin_edges[:-1] - y_bin_edges[1:], color='blue')
+        x_hist, x_bin_edges = np.histogram(
+            errs, bins=_bins(total_min, total_max))
+        axHistx.bar(
+            x_bin_edges[1:], x_hist, width=x_bin_edges[:-1] - x_bin_edges[1:], color='blue')
+        y_hist, y_bin_edges = np.histogram(
+            ests, bins=_bins(total_min, total_max))
+        axHisty.barh(
+            y_bin_edges[1:], y_hist, height=y_bin_edges[:-1] - y_bin_edges[1:], color='blue')
         axHistx.set_xscale('log')
         axHisty.set_yscale('log')
         axHistx.set_xticklabels([])
@@ -148,7 +153,8 @@ def analyze_pickle_histogram(args):
         total_max = max(ests) * 1.1
 
         hist, bin_edges = np.histogram(ests, bins=_bins(total_min, total_max))
-        plt.bar(bin_edges[1:], hist, width=bin_edges[:-1] - bin_edges[1:], color='blue')
+        plt.bar(bin_edges[1:], hist, width=bin_edges[:-1] -
+                bin_edges[1:], color='blue')
         plt.xlim([total_min, total_max])
         plt.xscale('log')
         plt.xlabel('estimated error')
@@ -161,7 +167,8 @@ def analyze_pickle_histogram(args):
         total_max = max(ests) * 1.1
 
         hist, bin_edges = np.histogram(errs, bins=_bins(total_min, total_max))
-        plt.bar(bin_edges[1:], hist, width=bin_edges[:-1] - bin_edges[1:], color='blue')
+        plt.bar(bin_edges[1:], hist, width=bin_edges[:-1] -
+                bin_edges[1:], color='blue')
         plt.xlim([total_min, total_max])
         plt.xscale('log')
         plt.xlabel('error')
@@ -225,7 +232,8 @@ def analyze_pickle_convergence(args):
         for u, mu in zip(us, mus):
             err = fom.solve(mu) - reductor.reconstruct(u)
             if args['--error-norm']:
-                errs.append(np.max(getattr(fom, args['--error-norm'] + '_norm')(err)))
+                errs.append(
+                    np.max(getattr(fom, args['--error-norm'] + '_norm')(err)))
             else:
                 errs.append(np.max(err.l2_norm()))
         ERRS.append(max(errs))
@@ -250,8 +258,8 @@ def analyze_pickle_convergence(args):
     plt.plot(dims, T_SOLVES, label='avg. solve time')
     if hasattr(rom, 'estimate'):
         plt.plot(dims, T_ESTS, label='avg. estimate time')
-    plt.xlabel('dimension')
-    plt.ylabel('milliseconds')
+    #plt.xlabel('dimension')
+    #plt.ylabel('milliseconds')
     plt.legend()
 
     plt.show()
@@ -268,4 +276,5 @@ if __name__ == '__main__':
     # parse arguments
     args = docopt(__doc__)
     # run demo
-    analyze_pickle_demo(args)
+    #analyze_pickle_demo("histgram")
+    analyze_pickle_histogram(args)
