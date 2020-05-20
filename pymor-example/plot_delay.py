@@ -11,7 +11,7 @@ from pymor.basic import *
 from pymor.models.iosys import LinearDelayModel
 from pymor.reductors.interpolation import DelayBHIReductor, TFBHIReductor
 
-sys.path.append(os.path.join("./"))
+sys.path.append(os.path.join("../"))
 from src.base import plot2d
 
 import logging
@@ -70,7 +70,7 @@ if __name__ == '__main__':
     obj.axs.set_title('Magnitude plot of the FOM and ROM')
     obj.SavePng_Serial()
 
-    obj.new_2Dfig()
+    obj.new_2Dfig(aspect="auto")
     err_rom.mag_plot(w, ax=obj.axs)
     obj.axs.set_title('Magnitude plot of the error')
     obj.SavePng_Serial()
@@ -87,7 +87,7 @@ if __name__ == '__main__':
     obj.axs.set_title('Magnitude plot of the FOM and ROMs')
     obj.SavePng_Serial()
 
-    obj.new_2Dfig()
+    obj.new_2Dfig(aspect="auto")
     err_rom.mag_plot(w, ax=obj.axs, color='tab:orange')
     err_td_rom.mag_plot(w, ax=obj.axs, color='tab:green')
     obj.axs.set_title('Magnitude plot of the errors')
