@@ -27,21 +27,31 @@ Options:
 from docopt import docopt
 import numpy as np
 
-from pymor.analyticalproblems.domaindescriptions import RectDomain
+#import logging
+# logging.getLogger('matplotlib').setLevel(logging.ERROR)
+
+from pymor.analyticalproblems.burgers import RectDomain
 from pymor.analyticalproblems.elliptic import StationaryProblem
-from pymor.analyticalproblems.functions import ExpressionFunction, ConstantFunction
-from pymor.discretizers.builtin import discretize_stationary_cg, discretize_stationary_fv, RectGrid, TriaGrid
+from pymor.analyticalproblems.burgers import ExpressionFunction, ConstantFunction
+from pymor.discretizers.cg import discretize_instationary_cg, discretize_stationary_cg
+from pymor.discretizers.fv import discretize_instationary_fv, discretize_stationary_fv
+from pymor.grids.rect import RectGrid
+from pymor.grids.tria import TriaGrid
 
 
 def elliptic_demo(args):
     args['PROBLEM-NUMBER'] = int(args['PROBLEM-NUMBER'])
-    assert 0 <= args['PROBLEM-NUMBER'] <= 1, ValueError('Invalid problem number')
+    assert 0 <= args['PROBLEM-NUMBER'] <= 1, ValueError(
+        'Invalid problem number')
     args['DIRICHLET-NUMBER'] = int(args['DIRICHLET-NUMBER'])
-    assert 0 <= args['DIRICHLET-NUMBER'] <= 2, ValueError('Invalid Dirichlet boundary number.')
+    assert 0 <= args['DIRICHLET-NUMBER'] <= 2, ValueError(
+        'Invalid Dirichlet boundary number.')
     args['NEUMANN-NUMBER'] = int(args['NEUMANN-NUMBER'])
-    assert 0 <= args['NEUMANN-NUMBER'] <= 2, ValueError('Invalid Neumann boundary number.')
+    assert 0 <= args['NEUMANN-NUMBER'] <= 2, ValueError(
+        'Invalid Neumann boundary number.')
     args['NEUMANN-COUNT'] = int(args['NEUMANN-COUNT'])
-    assert 0 <= args['NEUMANN-COUNT'] <= 3, ValueError('Invalid Neumann boundary count.')
+    assert 0 <= args['NEUMANN-COUNT'] <= 3, ValueError(
+        'Invalid Neumann boundary count.')
 
     rhss = [ExpressionFunction('ones(x.shape[:-1]) * 10', 2, ()),
             ExpressionFunction('(x[..., 0] - 0.5) ** 2 * 1000', 2, ())]

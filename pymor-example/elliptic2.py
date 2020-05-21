@@ -19,10 +19,14 @@ Options:
 
 from docopt import docopt
 
-from pymor.analyticalproblems.domaindescriptions import RectDomain
+from pymor.analyticalproblems.burgers import RectDomain
 from pymor.analyticalproblems.elliptic import StationaryProblem
-from pymor.analyticalproblems.functions import ExpressionFunction, LincombFunction, ConstantFunction
-from pymor.discretizers.builtin import discretize_stationary_cg, discretize_stationary_fv
+from pymor.analyticalproblems.burgers import ExpressionFunction, ConstantFunction
+from pymor.analyticalproblems.helmholtz import LincombFunction
+from pymor.discretizers.cg import discretize_instationary_cg, discretize_stationary_cg
+from pymor.discretizers.fv import discretize_instationary_fv, discretize_stationary_fv
+from pymor.grids.rect import RectGrid
+from pymor.grids.tria import TriaGrid
 from pymor.parameters.functionals import ProjectionParameterFunctional, ExpressionParameterFunctional
 from pymor.parameters.spaces import CubicParameterSpace
 
